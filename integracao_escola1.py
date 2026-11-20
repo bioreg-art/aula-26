@@ -74,7 +74,55 @@ try:
 
         cursor = conexao.cursor()
 
-except Error  as e:
+        insert = [
+            ("cursos",
+            "INSERT IGNORE INTO cursos (nome_curso, carga_horaria, turno)"
+            "VALUES(%s, %s, %s)",
+            cursos),
+            ("alunos",
+            "INSERT IGNORE INTO alunos"
+            "(nome, cpf, data_nascimento, email, telefone, data_matricula, id_curso)"
+            "VALUES(%s, %s, %s, %s, %s, %s, %s)",
+            alunos),
+            ("disciplinas",
+             "INSERT IGNORE INTO disciplinas (nome_disciplina, carga_horaria, id_curso)"
+             "VALUES (%s, %s, %s)",
+            disciplinas),
+            ("notas",
+             "INSERT IGNORE INTO notas (id_aluno, id_disciplina, nota, data_avaliacao)"
+             "VALUES (%s, %s, %s, %s)",
+             notas),
+             ]
+
+        for tabela, sql, valores in insert:
+            cursor.executemany(sql, valores)
+            conexao.commit()
+            print(f"{tabela}: {cursor.rowcount} linha(s) inserida(s)")
+
+        consulta = """
+            SELECT a.id_aluno, a.nome, c.nome_curso, c.turno,
+            d.nome_disciplina, n.nota, n.data_avaliacao
+            FROM notas n
+            INNER JOIN alunos      a ON n.id_aluno = a.id_aluno
+            INNER JOIN disciplinas d ON n.id_disciplina = d.id_disciplina
+            INNER JOIN cursos      c ON a.id_curso      = c.id_curso
+            ORDER BY c.nome_curso, a.nome, d.nome_disciplina
+       """
+        cursor.execute(consulta)
+
+        df = pd.DataFrame(cursor.fetchall(), columns=cursor.column_names)
+
+        df["nota"] = df['nota'].astype(float)
+
+        print("\nDataFrame (notas + alunos + disciplinas + cursos):")
+        print(df)
+
+    df.to_csv("notas_alunos.csv", index=False, encoding="utf-8-sig")
+    print("\nArquivo notas_alunos,csv gerado!")
+
+
+                  
+except Error  as e: 
     print(f"Erro ao conectar ou executar: {e}")
 
 finally:
