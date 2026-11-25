@@ -134,4 +134,32 @@ finally:
     if 'conexao' in locals () and conexao.is_connected():
         conexao.close()
         print("Conexão encerrada")
+
+if 'df'in locals() and not df.empty:
+
+    #Grafico 1: quantos alunos há em cada curso
+    #nunque(conta cada aluno uma vez só (ele aparece uma vez por nota)
+    alunos_por_curso = df.groupby("nome_curso")["id_aluno"].nunique().sort_values()
+
+    # Gráfico 2: média de notas em cada disciplina
+    media_por_disciplina = df.groupby("nome_disciplina")["nota"].mean().sort_values()
+
+    # Uma figura com dois gráficos lado a lado
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+
+    bars1 =ax1.barh(alunos_por_curso.index, alunos_por_curso.values, color="#2a7ab9")
+    ax1.bar_label(bars1, padding=3)
+    ax1.set_title("Alunos matriculados por curso")
+    ax1.set_label("Quantidade de alunos")
+    ax1.set_xlim(0, alunos_por_curso.max() +1)  #espaço para o rótulo
+
+    bars2 = ax2.barh(media_por_disciplina.index, media_por_disciplina.values, color="#2a7ab9")
+    ax2.bar_label(bars2, fmt="%.2f", padding=3)
+    ax2.set_title("Media das notas por disciplina")
+    ax2.set_label("Nota média(0 a 10)")
+    ax2.set_xlim(0, 10.5)
+
+    plt.tight_layout()
+    plt.savefig("graficos_escola.png", dpi=150)   #salva a imagem
+    plt.show()
         
